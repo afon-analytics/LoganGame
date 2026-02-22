@@ -1717,6 +1717,8 @@
         }
         
         function loseLife() {
+            player.powered = false;
+            fireballs.length = 0;
             gameState.lives--;
             updateLives();
             if (gameState.lives <= 0) {

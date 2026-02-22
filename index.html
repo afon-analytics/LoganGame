@@ -223,6 +223,7 @@
     
     <div id="hud">
         <span id="world">WORLD 1-1</span>
+        <span id="score" style="position:absolute;left:50%;transform:translateX(-50%)">SCORE 0</span>
         <span id="lives">❤️❤️❤️</span>
     </div>
 
@@ -840,7 +841,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        const LEVEL_WIDTH = 2400;
+        let LEVEL_WIDTH = 2400;
         const LEVEL_HEIGHT = 600;
         
         let camera = {
@@ -874,102 +875,307 @@
         
         let keys = {};
         
-        // Larger platforms with brick texture
-        let platforms = [
-            // Ground throughout the entire level
-            { x: 0, y: 550, width: LEVEL_WIDTH, height: 50, type: 'ground' },
-            
-            // Starting area platforms - LARGER
-            { x: 200, y: 420, width: 200, height: 30, type: 'platform' },
-            { x: 450, y: 320, width: 180, height: 30, type: 'platform' },
-            { x: 680, y: 220, width: 200, height: 30, type: 'platform' },
-            
-            // Middle section platforms - LARGER
-            { x: 950, y: 420, width: 220, height: 30, type: 'platform' },
-            { x: 1220, y: 350, width: 180, height: 30, type: 'platform' },
-            { x: 1450, y: 280, width: 200, height: 30, type: 'platform' },
-            { x: 1700, y: 420, width: 220, height: 30, type: 'platform' },
-            
-            // Final section platforms - LARGER
-            { x: 1980, y: 370, width: 180, height: 30, type: 'platform' },
-            { x: 2200, y: 300, width: 150, height: 30, type: 'platform' },
-            
-            // Walls
-            { x: 0, y: 0, width: 20, height: 600, type: 'wall' },
-            { x: LEVEL_WIDTH - 20, y: 0, width: 20, height: 600, type: 'wall' }
-        ];
-        
-        // MOVING enemies on both ground and platforms!
-        let enemies = [
-            // Ground enemies - starting area
-            { x: 300, y: 520, width: 30, height: 30, type: 'goomba', velocityX: -2 },
-            { x: 600, y: 520, width: 30, height: 30, type: 'koopa', velocityX: 1.5 },
-            
-            // Platform enemies - starting area
-            { x: 280, y: 390, width: 30, height: 30, type: 'goomba', velocityX: -1.5 },
-            { x: 520, y: 290, width: 30, height: 30, type: 'koopa', velocityX: 1 },
-            { x: 750, y: 190, width: 30, height: 30, type: 'goomba', velocityX: -1 },
-            
-            // Ground enemies - middle section
-            { x: 1100, y: 520, width: 30, height: 30, type: 'goomba', velocityX: 2 },
-            { x: 1500, y: 520, width: 30, height: 30, type: 'koopa', velocityX: -1.5 },
-            
-            // Platform enemies - middle section
-            { x: 1050, y: 390, width: 30, height: 30, type: 'goomba', velocityX: -1.5 },
-            { x: 1320, y: 320, width: 30, height: 30, type: 'koopa', velocityX: 1 },
-            { x: 1550, y: 250, width: 30, height: 30, type: 'goomba', velocityX: -1 },
-            { x: 1800, y: 390, width: 30, height: 30, type: 'koopa', velocityX: -1 },
-            
-            // Ground enemies - final section
-            { x: 1950, y: 520, width: 30, height: 30, type: 'koopa', velocityX: 1.5 },
-            { x: 2150, y: 520, width: 30, height: 30, type: 'goomba', velocityX: -2 },
-            
-            // Platform enemies - final section
-            { x: 2050, y: 340, width: 30, height: 30, type: 'goomba', velocityX: 1.5 },
-            { x: 2250, y: 270, width: 30, height: 30, type: 'koopa', velocityX: -1 }
-        ];
-        
-        let powerups = [
-            { x: 500, y: 290, width: 25, height: 25, type: 'mushroom', collected: false },
-            { x: 1280, y: 320, width: 25, height: 25, type: 'mushroom', collected: false },
-            { x: 2020, y: 340, width: 25, height: 25, type: 'mushroom', collected: false }
+        // ─── LEVEL DEFINITIONS ────────────────────────────────────────────
+        const LEVELS = [
+          // ── WORLD 1-1  Mushroom Plains ──────────────────────────────────
+          { name:'WORLD 1-1', levelWidth:2400, bgStyle:'plains',
+            platforms:[
+              {x:0,   y:550,width:2400,height:50,type:'ground'},
+              {x:200, y:420,width:200, height:30,type:'platform'},
+              {x:450, y:320,width:180, height:30,type:'platform'},
+              {x:680, y:220,width:200, height:30,type:'platform'},
+              {x:950, y:420,width:220, height:30,type:'platform'},
+              {x:1220,y:350,width:180, height:30,type:'platform'},
+              {x:1450,y:280,width:200, height:30,type:'platform'},
+              {x:1700,y:420,width:220, height:30,type:'platform'},
+              {x:1980,y:370,width:180, height:30,type:'platform'},
+              {x:2200,y:300,width:150, height:30,type:'platform'},
+              {x:0,   y:0,  width:20,  height:600,type:'wall'},
+              {x:2380,y:0,  width:20,  height:600,type:'wall'}
+            ],
+            enemies:[
+              {x:300, y:520,width:30,height:30,type:'goomba',velocityX:-2},
+              {x:600, y:520,width:30,height:30,type:'koopa', velocityX:1.5},
+              {x:280, y:390,width:30,height:30,type:'goomba',velocityX:-1.5},
+              {x:520, y:290,width:30,height:30,type:'koopa', velocityX:1},
+              {x:750, y:190,width:30,height:30,type:'goomba',velocityX:-1},
+              {x:1100,y:520,width:30,height:30,type:'goomba',velocityX:2},
+              {x:1500,y:520,width:30,height:30,type:'koopa', velocityX:-1.5},
+              {x:1050,y:390,width:30,height:30,type:'goomba',velocityX:-1.5},
+              {x:1320,y:320,width:30,height:30,type:'koopa', velocityX:1},
+              {x:1550,y:250,width:30,height:30,type:'goomba',velocityX:-1},
+              {x:1800,y:390,width:30,height:30,type:'koopa', velocityX:-1},
+              {x:1950,y:520,width:30,height:30,type:'koopa', velocityX:1.5},
+              {x:2150,y:520,width:30,height:30,type:'goomba',velocityX:-2},
+              {x:2050,y:340,width:30,height:30,type:'goomba',velocityX:1.5},
+              {x:2250,y:270,width:30,height:30,type:'koopa', velocityX:-1}
+            ],
+            powerups:[
+              {x:500, y:290,width:25,height:25,type:'mushroom',collected:false},
+              {x:1280,y:320,width:25,height:25,type:'mushroom',collected:false},
+              {x:2020,y:340,width:25,height:25,type:'mushroom',collected:false}
+            ],
+            questionBlocks:[
+              {x:350, y:440,width:30,height:30,hit:false,item:'mushroom'},
+              {x:250, y:300,width:30,height:30,hit:false,item:'flower'},
+              {x:580, y:440,width:30,height:30,hit:false,item:'mushroom'},
+              {x:500, y:205,width:30,height:30,hit:false,item:'flower'},
+              {x:1100,y:440,width:30,height:30,hit:false,item:'mushroom'},
+              {x:1270,y:255,width:30,height:30,hit:false,item:'flower'},
+              {x:1760,y:440,width:30,height:30,hit:false,item:'mushroom'},
+              {x:2060,y:270,width:30,height:30,hit:false,item:'flower'}
+            ],
+            coins:[
+              {x:100,y:518,width:14,height:14,collected:false},
+              {x:130,y:518,width:14,height:14,collected:false},
+              {x:160,y:518,width:14,height:14,collected:false},
+              {x:260,y:388,width:14,height:14,collected:false},
+              {x:290,y:388,width:14,height:14,collected:false},
+              {x:360,y:468,width:14,height:14,collected:false},
+              {x:393,y:452,width:14,height:14,collected:false},
+              {x:426,y:468,width:14,height:14,collected:false},
+              {x:520,y:288,width:14,height:14,collected:false},
+              {x:550,y:288,width:14,height:14,collected:false},
+              {x:750,y:188,width:14,height:14,collected:false},
+              {x:780,y:188,width:14,height:14,collected:false},
+              {x:1010,y:388,width:14,height:14,collected:false},
+              {x:1040,y:388,width:14,height:14,collected:false},
+              {x:1270,y:318,width:14,height:14,collected:false},
+              {x:1300,y:318,width:14,height:14,collected:false},
+              {x:1760,y:388,width:14,height:14,collected:false},
+              {x:1790,y:388,width:14,height:14,collected:false},
+              {x:2100,y:518,width:14,height:14,collected:false},
+              {x:2140,y:518,width:14,height:14,collected:false}
+            ],
+            flag:{x:2280,y:380,width:40,height:170},
+            boss:null
+          },
+
+          // ── WORLD 1-2  Sky Peaks ─────────────────────────────────────────
+          { name:'WORLD 1-2', levelWidth:2800, bgStyle:'sky',
+            platforms:[
+              {x:0,   y:550,width:2800,height:50,type:'ground'},
+              {x:150, y:450,width:160, height:30,type:'platform'},
+              {x:400, y:370,width:130, height:30,type:'platform'},
+              {x:610, y:290,width:140, height:30,type:'platform'},
+              {x:830, y:210,width:130, height:30,type:'platform'},
+              {x:1060,y:380,width:150, height:30,type:'platform'},
+              {x:1290,y:300,width:130, height:30,type:'platform'},
+              {x:1500,y:210,width:140, height:30,type:'platform'},
+              {x:1720,y:360,width:150, height:30,type:'platform'},
+              {x:1940,y:280,width:130, height:30,type:'platform'},
+              {x:2160,y:200,width:140, height:30,type:'platform'},
+              {x:2390,y:370,width:160, height:30,type:'platform'},
+              {x:2610,y:290,width:150, height:30,type:'platform'},
+              {x:0,   y:0,  width:20,  height:600,type:'wall'},
+              {x:2780,y:0,  width:20,  height:600,type:'wall'}
+            ],
+            enemies:[
+              {x:300, y:520,width:30,height:30,type:'goomba',velocityX:-2.5},
+              {x:700, y:520,width:30,height:30,type:'koopa', velocityX:2},
+              {x:1200,y:520,width:30,height:30,type:'goomba',velocityX:-2.5},
+              {x:1800,y:520,width:30,height:30,type:'koopa', velocityX:2},
+              {x:2300,y:520,width:30,height:30,type:'goomba',velocityX:-2},
+              {x:460, y:340,width:30,height:30,type:'koopa', velocityX:1.5},
+              {x:1120,y:350,width:30,height:30,type:'goomba',velocityX:-2},
+              {x:1780,y:330,width:30,height:30,type:'koopa', velocityX:1.5},
+              {x:2450,y:340,width:30,height:30,type:'goomba',velocityX:-2},
+              // Flying enemies
+              {x:500, y:440,width:28,height:28,type:'fly',velocityX:1.5, baseY:440,amplitude:25,wave:0},
+              {x:820, y:350,width:28,height:28,type:'fly',velocityX:-1.5,baseY:350,amplitude:30,wave:1},
+              {x:1350,y:370,width:28,height:28,type:'fly',velocityX:2,   baseY:370,amplitude:20,wave:0.5},
+              {x:1650,y:430,width:28,height:28,type:'fly',velocityX:-1.5,baseY:430,amplitude:25,wave:0},
+              {x:2050,y:350,width:28,height:28,type:'fly',velocityX:2,   baseY:350,amplitude:30,wave:0.7},
+              {x:2500,y:420,width:28,height:28,type:'fly',velocityX:-2,  baseY:420,amplitude:20,wave:0}
+            ],
+            powerups:[
+              {x:900, y:520,width:25,height:25,type:'mushroom',collected:false},
+              {x:1900,y:520,width:25,height:25,type:'mushroom',collected:false}
+            ],
+            questionBlocks:[
+              {x:210, y:420,width:30,height:30,hit:false,item:'mushroom'},
+              {x:470, y:340,width:30,height:30,hit:false,item:'flower'},
+              {x:680, y:460,width:30,height:30,hit:false,item:'mushroom'},
+              {x:1090,y:350,width:30,height:30,hit:false,item:'flower'},
+              {x:1360,y:460,width:30,height:30,hit:false,item:'mushroom'},
+              {x:1760,y:330,width:30,height:30,hit:false,item:'flower'},
+              {x:2230,y:460,width:30,height:30,hit:false,item:'mushroom'},
+              {x:2460,y:270,width:30,height:30,hit:false,item:'flower'}
+            ],
+            coins:[
+              {x:200,y:418,width:14,height:14,collected:false},
+              {x:230,y:418,width:14,height:14,collected:false},
+              {x:450,y:338,width:14,height:14,collected:false},
+              {x:480,y:338,width:14,height:14,collected:false},
+              {x:660,y:258,width:14,height:14,collected:false},
+              {x:690,y:258,width:14,height:14,collected:false},
+              {x:880,y:178,width:14,height:14,collected:false},
+              {x:910,y:178,width:14,height:14,collected:false},
+              {x:1110,y:348,width:14,height:14,collected:false},
+              {x:1140,y:348,width:14,height:14,collected:false},
+              {x:1340,y:268,width:14,height:14,collected:false},
+              {x:1370,y:268,width:14,height:14,collected:false},
+              {x:1770,y:328,width:14,height:14,collected:false},
+              {x:1800,y:328,width:14,height:14,collected:false},
+              {x:2000,y:248,width:14,height:14,collected:false},
+              {x:2030,y:248,width:14,height:14,collected:false},
+              {x:2440,y:338,width:14,height:14,collected:false},
+              {x:2470,y:338,width:14,height:14,collected:false},
+              {x:2660,y:258,width:14,height:14,collected:false},
+              {x:2690,y:258,width:14,height:14,collected:false}
+            ],
+            flag:{x:2700,y:380,width:40,height:170},
+            boss:null
+          },
+
+          // ── WORLD 1-3  Bowser's Castle ────────────────────────────────────
+          { name:"WORLD 1-3", levelWidth:3200, bgStyle:'castle',
+            platforms:[
+              {x:0,   y:550,width:3200,height:50,type:'ground'},
+              {x:200, y:440,width:180, height:30,type:'platform'},
+              {x:450, y:360,width:160, height:30,type:'platform'},
+              {x:680, y:280,width:160, height:30,type:'platform'},
+              {x:900, y:200,width:150, height:30,type:'platform'},
+              {x:1110,y:370,width:180, height:30,type:'platform'},
+              {x:1360,y:290,width:160, height:30,type:'platform'},
+              {x:1580,y:210,width:160, height:30,type:'platform'},
+              {x:1800,y:360,width:180, height:30,type:'platform'},
+              {x:2050,y:280,width:160, height:30,type:'platform'},
+              {x:2300,y:200,width:160, height:30,type:'platform'},
+              {x:2550,y:380,width:150, height:30,type:'platform'},
+              {x:0,   y:0,  width:20,  height:600,type:'wall'},
+              {x:3180,y:0,  width:20,  height:600,type:'wall'}
+            ],
+            enemies:[
+              // Ground
+              {x:280, y:520,width:30,height:30,type:'goomba',velocityX:-2.5},
+              {x:550, y:520,width:30,height:30,type:'koopa', velocityX:2},
+              {x:900, y:520,width:30,height:30,type:'goomba',velocityX:-2.5},
+              {x:1300,y:520,width:30,height:30,type:'koopa', velocityX:2.5},
+              {x:1700,y:520,width:30,height:30,type:'goomba',velocityX:-3},
+              {x:2100,y:520,width:30,height:30,type:'koopa', velocityX:2.5},
+              {x:2500,y:520,width:30,height:30,type:'goomba',velocityX:-2.5},
+              // Platform
+              {x:260, y:410,width:30,height:30,type:'goomba',velocityX:-2},
+              {x:510, y:330,width:30,height:30,type:'koopa', velocityX:1.5},
+              {x:740, y:250,width:30,height:30,type:'goomba',velocityX:-2},
+              {x:1170,y:340,width:30,height:30,type:'koopa', velocityX:2},
+              {x:1420,y:260,width:30,height:30,type:'goomba',velocityX:-2},
+              {x:1640,y:180,width:30,height:30,type:'koopa', velocityX:1.5},
+              {x:1860,y:330,width:30,height:30,type:'goomba',velocityX:-2.5},
+              {x:2110,y:250,width:30,height:30,type:'koopa', velocityX:2},
+              {x:2360,y:170,width:30,height:30,type:'goomba',velocityX:-2},
+              // Flying
+              {x:380, y:420,width:28,height:28,type:'fly',velocityX:2,   baseY:420,amplitude:30,wave:0},
+              {x:630, y:340,width:28,height:28,type:'fly',velocityX:-2,  baseY:340,amplitude:25,wave:0.5},
+              {x:1000,y:380,width:28,height:28,type:'fly',velocityX:2.5, baseY:380,amplitude:30,wave:1},
+              {x:1520,y:350,width:28,height:28,type:'fly',velocityX:-2.5,baseY:350,amplitude:25,wave:0},
+              {x:2000,y:390,width:28,height:28,type:'fly',velocityX:2,   baseY:390,amplitude:30,wave:0.3},
+              {x:2450,y:360,width:28,height:28,type:'fly',velocityX:-2.5,baseY:360,amplitude:25,wave:0.8},
+              {x:2700,y:430,width:28,height:28,type:'fly',velocityX:2.5, baseY:430,amplitude:20,wave:0}
+            ],
+            powerups:[
+              {x:1000,y:520,width:25,height:25,type:'mushroom',collected:false},
+              {x:2200,y:520,width:25,height:25,type:'mushroom',collected:false}
+            ],
+            questionBlocks:[
+              {x:280, y:410,width:30,height:30,hit:false,item:'mushroom'},
+              {x:520, y:330,width:30,height:30,hit:false,item:'flower'},
+              {x:750, y:460,width:30,height:30,hit:false,item:'mushroom'},
+              {x:1200,y:360,width:30,height:30,hit:false,item:'flower'},
+              {x:1460,y:460,width:30,height:30,hit:false,item:'mushroom'},
+              {x:1720,y:370,width:30,height:30,hit:false,item:'flower'},
+              {x:2200,y:460,width:30,height:30,hit:false,item:'mushroom'},
+              {x:2460,y:175,width:30,height:30,hit:false,item:'flower'}
+            ],
+            coins:[
+              {x:250,y:408,width:14,height:14,collected:false},
+              {x:280,y:408,width:14,height:14,collected:false},
+              {x:500,y:328,width:14,height:14,collected:false},
+              {x:530,y:328,width:14,height:14,collected:false},
+              {x:730,y:248,width:14,height:14,collected:false},
+              {x:760,y:248,width:14,height:14,collected:false},
+              {x:950,y:168,width:14,height:14,collected:false},
+              {x:980,y:168,width:14,height:14,collected:false},
+              {x:1160,y:338,width:14,height:14,collected:false},
+              {x:1190,y:338,width:14,height:14,collected:false},
+              {x:1630,y:178,width:14,height:14,collected:false},
+              {x:1660,y:178,width:14,height:14,collected:false},
+              {x:1850,y:328,width:14,height:14,collected:false},
+              {x:1880,y:328,width:14,height:14,collected:false},
+              {x:2100,y:248,width:14,height:14,collected:false},
+              {x:2130,y:248,width:14,height:14,collected:false},
+              {x:2350,y:168,width:14,height:14,collected:false},
+              {x:2380,y:168,width:14,height:14,collected:false},
+              {x:2600,y:348,width:14,height:14,collected:false},
+              {x:2630,y:348,width:14,height:14,collected:false}
+            ],
+            flag:{x:3100,y:380,width:40,height:170},
+            boss:{x:2830,y:478,width:64,height:72,velocityX:-2.5,health:3,maxHealth:3,stunTimer:0,defeated:false}
+          }
         ];
 
-        // Question blocks — yellow ? blocks that spawn an item when hit from below
-        let questionBlocks = [
-            // Zone 1 — reachable from ground
-            { x: 350, y: 440, width: 30, height: 30, hit: false, item: 'mushroom' },
-            // Zone 1 — reachable from first elevated platform (y=420)
-            { x: 250, y: 300, width: 30, height: 30, hit: false, item: 'flower' },
-            // Zone 2 — reachable from ground
-            { x: 580, y: 440, width: 30, height: 30, hit: false, item: 'mushroom' },
-            // Zone 2 — reachable from second platform (y=320)
-            { x: 500, y: 205, width: 30, height: 30, hit: false, item: 'flower' },
-            // Middle — reachable from ground
-            { x: 1100, y: 440, width: 30, height: 30, hit: false, item: 'mushroom' },
-            // Middle — reachable from platform (y=350)
-            { x: 1270, y: 255, width: 30, height: 30, hit: false, item: 'flower' },
-            // Late — reachable from ground
-            { x: 1760, y: 440, width: 30, height: 30, hit: false, item: 'mushroom' },
-            // Late — reachable from platform (y=370)
-            { x: 2060, y: 270, width: 30, height: 30, hit: false, item: 'flower' },
-        ];
-        
-        let flag = {
-            x: 2280,
-            y: 380,
-            width: 40,
-            height: 170
-        };
+        function loadLevel(index) {
+            const lvl = LEVELS[index];
+            LEVEL_WIDTH = lvl.levelWidth;
+            // Deep-copy every mutable array so the template stays pristine
+            platforms     = lvl.platforms.map(p => Object.assign({}, p));
+            enemies       = lvl.enemies.map(e => Object.assign({}, e));
+            powerups      = lvl.powerups.map(p => Object.assign({}, p));
+            questionBlocks= lvl.questionBlocks.map(b => Object.assign({}, b));
+            coins         = lvl.coins.map(c => Object.assign({}, c));
+            flag          = Object.assign({}, lvl.flag);
+            boss          = lvl.boss ? Object.assign({}, lvl.boss) : null;
+
+            player.x = 100; player.y = 400;
+            player.velocityX = 0; player.velocityY = 0;
+            player.onGround = false; player.powered = false;
+            fireballs.length = 0;
+            particles.length = 0;
+            camera.x = 0;
+
+            document.getElementById('world').textContent = lvl.name;
+            gamePhase = 'playing';
+        }
         
         let particles = [];
         let fireballs = [];
+
+        // Multi-level game state
+        let gamePhase = 'playing'; // 'playing' | 'paused' | 'level_complete' | 'game_over' | 'game_won'
+        let currentLevelIndex = 0;
+
+        // Active level objects (populated by loadLevel)
+        let platforms, enemies, powerups, questionBlocks, coins, flag, boss;
         
         document.addEventListener('keydown', (e) => {
             keys[e.key] = true;
             if (e.key === ' ') e.preventDefault();
+
+            // Pause toggle
+            if (e.key === 'p' || e.key === 'P') {
+                if      (gamePhase === 'playing') gamePhase = 'paused';
+                else if (gamePhase === 'paused')  gamePhase = 'playing';
+            }
+
+            // Advance from overlay screens
+            if (e.key === 'Enter') {
+                if (gamePhase === 'level_complete') {
+                    currentLevelIndex++;
+                    loadLevel(currentLevelIndex);
+                } else if (gamePhase === 'game_over') {
+                    gameState.lives = 3;
+                    gameState.score = 0;
+                    currentLevelIndex = 0;
+                    updateLives();
+                    updateScore();
+                    loadLevel(0);
+                } else if (gamePhase === 'game_won') {
+                    location.reload();
+                }
+            }
         });
-        
+
         document.addEventListener('keyup', (e) => {
             keys[e.key] = false;
         });
@@ -990,6 +1196,12 @@
         
         function initGame() {
             player.character = selectedCharacter;
+            currentLevelIndex = 0;
+            gameState.lives = 3;
+            gameState.score = 0;
+            updateLives();
+            updateScore();
+            loadLevel(0);
             gameLoop();
         }
         
@@ -1006,6 +1218,8 @@
         }
         
         function update() {
+            if (gamePhase !== 'playing') return;
+
             player.velocityX = 0;
             player.ducking = false;
             
@@ -1068,34 +1282,38 @@
             // Enemies move now!
             enemies.forEach((enemy, index) => {
                 enemy.x += enemy.velocityX;
-                
-                // Bounce off level boundaries and platform edges
-                if (enemy.x <= 20 || enemy.x >= LEVEL_WIDTH - 50) {
-                    enemy.velocityX *= -1;
-                }
-                
-                // Check for platform edges and bounce
-                let onPlatform = false;
-                platforms.forEach(platform => {
-                    if (platform.type !== 'wall' && enemy.y + enemy.height >= platform.y && 
-                        enemy.y + enemy.height <= platform.y + 10 &&
-                        enemy.x + enemy.width > platform.x && enemy.x < platform.x + platform.width) {
-                        onPlatform = true;
-                        
-                        // Check if near edge of platform
-                        if (enemy.x <= platform.x + 5 || enemy.x + enemy.width >= platform.x + platform.width - 5) {
-                            enemy.velocityX *= -1;
-                        }
+
+                // Flying bat — sine-wave vertical motion, no platform checks
+                if (enemy.type === 'fly') {
+                    enemy.wave += 0.05;
+                    enemy.y = enemy.baseY + Math.sin(enemy.wave) * enemy.amplitude;
+                } else {
+                    // Bounce off level boundaries and platform edges
+                    if (enemy.x <= 20 || enemy.x >= LEVEL_WIDTH - 50) {
+                        enemy.velocityX *= -1;
                     }
-                });
-                
+
+                    // Check for platform edges and bounce
+                    platforms.forEach(platform => {
+                        if (platform.type !== 'wall' && enemy.y + enemy.height >= platform.y &&
+                            enemy.y + enemy.height <= platform.y + 10 &&
+                            enemy.x + enemy.width > platform.x && enemy.x < platform.x + platform.width) {
+                            if (enemy.x <= platform.x + 5 || enemy.x + enemy.width >= platform.x + platform.width - 5) {
+                                enemy.velocityX *= -1;
+                            }
+                        }
+                    });
+                }
+
                 if (checkCollision(player, enemy)) {
+                    // Stomping works on all enemy types; fly enemies die to any stomp from above
                     if (player.velocityY > 0 && player.y + player.height - player.velocityY <= enemy.y + 10) {
                         enemies.splice(index, 1);
                         player.velocityY = -8;
-                        let color = enemy.type === 'goomba' ? '#8B4513' : '#228B22';
-                        createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, color);
+                        const color = enemy.type === 'goomba' ? '#8B4513' : enemy.type === 'fly' ? '#556688' : '#228B22';
+                        createParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, color);
                         gameState.score += 100;
+                        updateScore();
                     } else {
                         loseLife();
                     }
@@ -1154,37 +1372,85 @@
                 }
             });
             
-            // Update fireballs — move, kill enemies, remove when spent
+            // Collect coins
+            coins.forEach(coin => {
+                if (!coin.collected && checkCollision(player, coin)) {
+                    coin.collected = true;
+                    gameState.score += 50;
+                    updateScore();
+                    createParticles(coin.x + 7, coin.y + 7, '#FFD700');
+                }
+            });
+
+            // Update fireballs — move, kill enemies and boss, remove when spent
             for (let fi = fireballs.length - 1; fi >= 0; fi--) {
                 const fb = fireballs[fi];
                 fb.x += fb.velocityX;
                 fb.traveled += Math.abs(fb.velocityX);
 
-                // Remove if travelled too far or out of world bounds
                 if (fb.traveled > 700 || fb.x < 0 || fb.x > LEVEL_WIDTH) {
                     fireballs.splice(fi, 1);
                     continue;
                 }
 
-                // Check against every enemy
                 let hit = false;
                 for (let ei = enemies.length - 1; ei >= 0; ei--) {
                     if (checkCollision(fb, enemies[ei])) {
-                        const color = enemies[ei].type === 'goomba' ? '#8B4513' : '#228B22';
+                        const color = enemies[ei].type === 'goomba' ? '#8B4513' : enemies[ei].type === 'fly' ? '#556688' : '#228B22';
                         createParticles(enemies[ei].x + enemies[ei].width / 2, enemies[ei].y + enemies[ei].height / 2, color);
                         createParticles(fb.x + 6, fb.y + 6, '#FF6600');
                         enemies.splice(ei, 1);
                         gameState.score += 200;
+                        updateScore();
                         hit = true;
                         break;
                     }
                 }
-                if (hit) {
-                    fireballs.splice(fi, 1);
+                // Fireball can also hurt the boss
+                if (!hit && boss && !boss.defeated && boss.stunTimer === 0 && checkCollision(fb, boss)) {
+                    boss.health--;
+                    boss.stunTimer = 50;
+                    createParticles(fb.x + 6, fb.y + 6, '#FF6600');
+                    if (boss.health <= 0) {
+                        boss.defeated = true;
+                        gameState.score += 1000;
+                        updateScore();
+                        createParticles(boss.x + boss.width / 2, boss.y + boss.height / 2, '#FF6600');
+                    }
+                    hit = true;
+                }
+                if (hit) fireballs.splice(fi, 1);
+            }
+
+            // Boss update (level 3)
+            if (boss && !boss.defeated) {
+                boss.x += boss.velocityX;
+                if (boss.x <= LEVEL_WIDTH - 480 || boss.x + boss.width >= LEVEL_WIDTH - 120) {
+                    boss.velocityX *= -1;
+                }
+                if (boss.stunTimer > 0) boss.stunTimer--;
+
+                if (checkCollision(player, boss)) {
+                    // Stomp boss from above
+                    if (player.velocityY > 0 && player.y + player.height - player.velocityY <= boss.y + 12 && boss.stunTimer === 0) {
+                        boss.health--;
+                        boss.stunTimer = 60;
+                        player.velocityY = -10;
+                        createParticles(boss.x + boss.width / 2, boss.y, '#FF6600');
+                        if (boss.health <= 0) {
+                            boss.defeated = true;
+                            gameState.score += 1000;
+                            updateScore();
+                            for (let i = 0; i < 3; i++) createParticles(boss.x + boss.width / 2, boss.y + boss.height / 2, '#FF6600');
+                        }
+                    } else if (boss.stunTimer === 0) {
+                        loseLife();
+                    }
                 }
             }
 
-            if (checkCollision(player, flag)) {
+            // Flag / win — boss must be defeated on level 3
+            if (checkCollision(player, flag) && (!boss || boss.defeated)) {
                 winLevel();
             }
             
@@ -1396,40 +1662,54 @@
         }
         
         function render() {
-            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#87CEEB');
-            gradient.addColorStop(0.7, '#87CEEB');
-            gradient.addColorStop(0.7, '#90EE90');
-            gradient.addColorStop(1, '#90EE90');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw clouds with parallax
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-            let cloudOffset = camera.x * 0.3;
-            ctx.beginPath();
-            ctx.arc(150 - cloudOffset, 100, 30, 0, Math.PI * 2);
-            ctx.arc(180 - cloudOffset, 100, 40, 0, Math.PI * 2);
-            ctx.arc(210 - cloudOffset, 100, 30, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(500 - cloudOffset, 150, 35, 0, Math.PI * 2);
-            ctx.arc(535 - cloudOffset, 150, 45, 0, Math.PI * 2);
-            ctx.arc(575 - cloudOffset, 150, 35, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(900 - cloudOffset, 120, 35, 0, Math.PI * 2);
-            ctx.arc(940 - cloudOffset, 120, 45, 0, Math.PI * 2);
-            ctx.arc(985 - cloudOffset, 120, 35, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(1300 - cloudOffset, 100, 30, 0, Math.PI * 2);
-            ctx.arc(1335 - cloudOffset, 100, 40, 0, Math.PI * 2);
-            ctx.arc(1370 - cloudOffset, 100, 30, 0, Math.PI * 2);
-            ctx.fill();
+            const bgStyle = LEVELS[currentLevelIndex].bgStyle;
+
+            // ── Background ──────────────────────────────────────────────────
+            if (bgStyle === 'sky') {
+                const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                g.addColorStop(0,   '#8ECFFF');
+                g.addColorStop(0.6, '#D4EEFF');
+                g.addColorStop(1,   '#F0F8FF');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (bgStyle === 'castle') {
+                const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                g.addColorStop(0,    '#0D0020');
+                g.addColorStop(0.5,  '#2A0040');
+                g.addColorStop(0.85, '#5C1010');
+                g.addColorStop(1,    '#8B2020');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Stars
+                ctx.fillStyle = 'rgba(255,255,220,0.8)';
+                [[80,25],[180,55],[280,18],[420,42],[490,78],[145,88],[330,65],
+                 [580,28],[690,52],[240,108],[50,118],[390,12],[640,85],[740,38],[540,118]]
+                .forEach(([sx,sy]) => ctx.fillRect(sx, sy, 2, 2));
+            } else {
+                // Plains (default)
+                const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                g.addColorStop(0,   '#87CEEB');
+                g.addColorStop(0.7, '#87CEEB');
+                g.addColorStop(0.7, '#90EE90');
+                g.addColorStop(1,   '#90EE90');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // ── Parallax clouds (plains + sky only) ─────────────────────────
+            if (bgStyle !== 'castle') {
+                const cloudAlpha = bgStyle === 'sky' ? 0.8 : 0.6;
+                ctx.fillStyle = `rgba(255,255,255,${cloudAlpha})`;
+                const cloudOffset = camera.x * 0.3;
+                [[150,100,30,40,30],[500,150,35,45,35],[900,120,35,45,35],[1300,100,30,40,30]]
+                .forEach(([cx,cy,r1,r2,r3]) => {
+                    ctx.beginPath();
+                    ctx.arc(cx - cloudOffset,      cy, r1, 0, Math.PI * 2);
+                    ctx.arc(cx + r1 - cloudOffset, cy, r2, 0, Math.PI * 2);
+                    ctx.arc(cx + r1 + r2 - cloudOffset, cy, r3, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
             
             ctx.save();
             ctx.translate(-camera.x, -camera.y);
@@ -1486,6 +1766,26 @@
                 }
             });
 
+            // ── Coins ────────────────────────────────────────────────────────
+            coins.forEach(coin => {
+                if (!coin.collected) {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(coin.x + 7, coin.y + 7, 7, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#FFFF88';
+                    ctx.beginPath();
+                    ctx.arc(coin.x + 4, coin.y + 4, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#CC8800';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(coin.x + 7, coin.y + 7, 7, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+
+            // ── Flag / goal ──────────────────────────────────────────────────
             ctx.fillStyle = '#666';
             ctx.fillRect(flag.x + 5, flag.y, 8, flag.height);
             ctx.fillStyle = '#FFD700';
@@ -1549,8 +1849,104 @@
                     ctx.fillStyle = '#FF6B35';
                     ctx.fillRect(enemy.x + 6, enemy.y + 26, 6, 3);
                     ctx.fillRect(enemy.x + 18, enemy.y + 26, 6, 3);
+                } else if (enemy.type === 'fly') {
+                    // Bat — animated wings using Date.now()
+                    const ecx = enemy.x + enemy.width / 2;
+                    const ecy = enemy.y + enemy.height / 2;
+                    const wingUp = Math.sin(Date.now() / 140) > 0;
+                    ctx.fillStyle = '#556688';
+                    // Left wing
+                    ctx.beginPath();
+                    ctx.moveTo(ecx, ecy + 2);
+                    ctx.lineTo(ecx - 16, wingUp ? ecy - 9  : ecy + 9);
+                    ctx.lineTo(ecx - 7,  ecy + 3);
+                    ctx.closePath();
+                    ctx.fill();
+                    // Right wing
+                    ctx.beginPath();
+                    ctx.moveTo(ecx, ecy + 2);
+                    ctx.lineTo(ecx + 16, wingUp ? ecy - 9  : ecy + 9);
+                    ctx.lineTo(ecx + 7,  ecy + 3);
+                    ctx.closePath();
+                    ctx.fill();
+                    // Body
+                    ctx.fillStyle = '#334466';
+                    ctx.beginPath();
+                    ctx.ellipse(ecx, ecy + 4, 7, 9, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Red eyes
+                    ctx.fillStyle = '#FF2222';
+                    ctx.beginPath(); ctx.arc(ecx - 3, ecy, 2.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(ecx + 3, ecy, 2.5, 0, Math.PI * 2); ctx.fill();
                 }
             });
+
+            // ── Boss (level 3) ────────────────────────────────────────────────
+            if (boss && !boss.defeated) {
+                const bx = boss.x, by = boss.y, bw = boss.width, bh = boss.height;
+                const stun = boss.stunTimer > 0;
+                const bc = stun ? '#FF8800' : '#228B22';
+                // Body
+                ctx.fillStyle = bc;
+                ctx.fillRect(bx + 6, by + 22, bw - 12, bh - 22);
+                // Belly
+                ctx.fillStyle = stun ? '#FFCC44' : '#FFCC66';
+                ctx.fillRect(bx + 16, by + 30, bw - 32, bh - 42);
+                // Head
+                ctx.fillStyle = bc;
+                ctx.fillRect(bx + 4, by, bw - 8, 26);
+                // Snout
+                ctx.fillStyle = stun ? '#DD6600' : '#33AA33';
+                ctx.fillRect(bx + 14, by + 15, bw - 28, 9);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(bx + 18, by + 17, 5, 5);
+                ctx.fillRect(bx + bw - 23, by + 17, 5, 5);
+                // Eyes
+                ctx.fillStyle = '#FF0000';
+                ctx.fillRect(bx + 10, by + 5, 10, 8);
+                ctx.fillRect(bx + bw - 20, by + 5, 10, 8);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(bx + 14, by + 7, 5, 5);
+                ctx.fillRect(bx + bw - 16, by + 7, 5, 5);
+                // Angry brows
+                ctx.fillStyle = '#000';
+                ctx.fillRect(bx + 8,       by + 3, 14, 3);
+                ctx.fillRect(bx + bw - 22, by + 3, 14, 3);
+                // Back spikes
+                ctx.fillStyle = '#FF6600';
+                for (let s = 0; s < 4; s++) {
+                    const sx = bx + 8 + s * 14;
+                    ctx.beginPath();
+                    ctx.moveTo(sx, by + 22); ctx.lineTo(sx + 7, by + 5); ctx.lineTo(sx + 14, by + 22);
+                    ctx.fill();
+                }
+                // Arms
+                ctx.fillStyle = bc;
+                ctx.fillRect(bx - 10, by + 24, 18, 14);
+                ctx.fillRect(bx + bw - 8, by + 24, 18, 14);
+                // Claws
+                ctx.fillStyle = '#AA4400';
+                [-10, -4, 2].forEach(o => ctx.fillRect(bx + o, by + 36, 5, 8));
+                [bw - 6, bw, bw + 6].forEach(o => ctx.fillRect(bx + o, by + 36, 5, 8));
+                // Legs
+                ctx.fillStyle = bc;
+                ctx.fillRect(bx + 8,       by + bh - 22, 18, 22);
+                ctx.fillRect(bx + bw - 26, by + bh - 22, 18, 22);
+                // Feet
+                ctx.fillStyle = '#AA4400';
+                ctx.fillRect(bx + 4,       by + bh - 6, 26, 8);
+                ctx.fillRect(bx + bw - 30, by + bh - 6, 26, 8);
+                // Health bar
+                const hbW = 80, hbH = 8;
+                const hbX = bx + (bw - hbW) / 2, hbY = by - 20;
+                ctx.fillStyle = '#333'; ctx.fillRect(hbX, hbY, hbW, hbH);
+                ctx.fillStyle = '#FF2222'; ctx.fillRect(hbX, hbY, hbW * boss.health / boss.maxHealth, hbH);
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(hbX, hbY, hbW, hbH);
+                ctx.fillStyle = '#FF2222';
+                ctx.font = 'bold 7px "Press Start 2P", cursive';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+                ctx.fillText('BOSS', bx + bw / 2, hbY - 2);
+            }
             
             powerups.forEach(powerup => {
                 if (!powerup.collected) {
@@ -1693,9 +2089,65 @@
                 ctx.globalAlpha = 1;
             });
             
-            ctx.restore();
+            ctx.restore(); // end camera transform
+
+            // ── HUD overlay — pause / level-complete / game-over / you-win ────
+            if (gamePhase !== 'playing') {
+                // Dim the scene
+                ctx.fillStyle = 'rgba(0,0,0,0.62)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const cx = canvas.width / 2, cy = canvas.height / 2;
+
+                if (gamePhase === 'paused') {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 28px "Press Start 2P", cursive';
+                    ctx.fillText('PAUSED', cx, cy - 30);
+                    ctx.font = '11px "Press Start 2P", cursive';
+                    ctx.fillStyle = '#CCCCCC';
+                    ctx.fillText('Press P to resume', cx, cy + 20);
+
+                } else if (gamePhase === 'level_complete') {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = 'bold 22px "Press Start 2P", cursive';
+                    ctx.fillText('LEVEL COMPLETE!', cx, cy - 60);
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = '12px "Press Start 2P", cursive';
+                    ctx.fillText(LEVELS[currentLevelIndex].name + ' cleared', cx, cy - 15);
+                    ctx.fillText('Score: ' + gameState.score, cx, cy + 25);
+                    ctx.fillStyle = '#AAFFAA';
+                    ctx.font = '10px "Press Start 2P", cursive';
+                    ctx.fillText('Press ENTER for next level', cx, cy + 68);
+
+                } else if (gamePhase === 'game_over') {
+                    ctx.fillStyle = '#FF3333';
+                    ctx.font = 'bold 28px "Press Start 2P", cursive';
+                    ctx.fillText('GAME OVER', cx, cy - 60);
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = '12px "Press Start 2P", cursive';
+                    ctx.fillText('Score: ' + gameState.score, cx, cy - 10);
+                    ctx.fillStyle = '#FFAAAA';
+                    ctx.font = '10px "Press Start 2P", cursive';
+                    ctx.fillText('Press ENTER to try again', cx, cy + 40);
+
+                } else if (gamePhase === 'game_won') {
+                    // Animated shimmer — just cycle between gold/white
+                    ctx.fillStyle = Date.now() % 1000 < 500 ? '#FFD700' : '#FFFFFF';
+                    ctx.font = 'bold 28px "Press Start 2P", cursive';
+                    ctx.fillText('YOU WIN!', cx, cy - 80);
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = '12px "Press Start 2P", cursive';
+                    ctx.fillText('All 3 worlds cleared!', cx, cy - 30);
+                    ctx.fillText('Final Score: ' + gameState.score, cx, cy + 15);
+                    ctx.fillStyle = '#AAFFAA';
+                    ctx.font = '10px "Press Start 2P", cursive';
+                    ctx.fillText('Press ENTER to play again', cx, cy + 60);
+                }
+            }
         }
-        
+
         function checkCollision(rect1, rect2) {
             return rect1.x < rect2.x + rect2.width &&
                    rect1.x + rect1.width > rect2.x &&
@@ -1717,32 +2169,31 @@
         }
         
         function loseLife() {
-            player.powered = false;
-            fireballs.length = 0;
             gameState.lives--;
             updateLives();
             if (gameState.lives <= 0) {
-                alert('GAME OVER! Score: ' + gameState.score);
-                location.reload();
+                gamePhase = 'game_over';
             } else {
-                player.x = 100;
-                player.y = 400;
-                player.velocityX = 0;
-                player.velocityY = 0;
+                loadLevel(currentLevelIndex); // respawn with level reset
             }
         }
-        
+
         function updateLives() {
             let hearts = '';
-            for (let i = 0; i < gameState.lives; i++) {
-                hearts += '❤️';
-            }
+            for (let i = 0; i < gameState.lives; i++) hearts += '❤️';
             document.getElementById('lives').textContent = hearts;
         }
-        
+
+        function updateScore() {
+            document.getElementById('score').textContent = 'SCORE ' + gameState.score;
+        }
+
         function winLevel() {
-            alert('LEVEL COMPLETE! Score: ' + gameState.score + '\n\nMore levels coming soon!');
-            location.reload();
+            if (currentLevelIndex < LEVELS.length - 1) {
+                gamePhase = 'level_complete';
+            } else {
+                gamePhase = 'game_won';
+            }
         }
     </script>
 </body>

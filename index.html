@@ -868,6 +868,7 @@
             ducking: false,
             canWallJump: false,
             facing: 1,
+            powered: false,
             character: selectedCharacter
         };
         
@@ -962,6 +963,7 @@
         };
         
         let particles = [];
+        let fireballs = [];
         
         document.addEventListener('keydown', (e) => {
             keys[e.key] = true;
@@ -970,6 +972,20 @@
         
         document.addEventListener('keyup', (e) => {
             keys[e.key] = false;
+        });
+
+        // Right-click shoots a fireball when the player has the fire power
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (!player.powered) return;
+            fireballs.push({
+                x: player.facing === 1 ? player.x + player.width - 4 : player.x - 8,
+                y: player.y + player.height / 2 - 6,
+                width: 12,
+                height: 12,
+                velocityX: player.facing * 9,
+                traveled: 0
+            });
         });
         
         function initGame() {
@@ -1127,13 +1143,47 @@
             powerups.forEach(powerup => {
                 if (!powerup.collected && checkCollision(player, powerup)) {
                     powerup.collected = true;
-                    gameState.lives++;
-                    updateLives();
-                    const pColor = powerup.type === 'flower' ? '#FF4444' : '#FFD700';
-                    createParticles(powerup.x + powerup.width / 2, powerup.y + powerup.height / 2, pColor);
+                    if (powerup.type === 'flower') {
+                        player.powered = true;
+                        createParticles(powerup.x + powerup.width / 2, powerup.y + powerup.height / 2, '#FF4444');
+                    } else {
+                        gameState.lives++;
+                        updateLives();
+                        createParticles(powerup.x + powerup.width / 2, powerup.y + powerup.height / 2, '#FFD700');
+                    }
                 }
             });
             
+            // Update fireballs — move, kill enemies, remove when spent
+            for (let fi = fireballs.length - 1; fi >= 0; fi--) {
+                const fb = fireballs[fi];
+                fb.x += fb.velocityX;
+                fb.traveled += Math.abs(fb.velocityX);
+
+                // Remove if travelled too far or out of world bounds
+                if (fb.traveled > 700 || fb.x < 0 || fb.x > LEVEL_WIDTH) {
+                    fireballs.splice(fi, 1);
+                    continue;
+                }
+
+                // Check against every enemy
+                let hit = false;
+                for (let ei = enemies.length - 1; ei >= 0; ei--) {
+                    if (checkCollision(fb, enemies[ei])) {
+                        const color = enemies[ei].type === 'goomba' ? '#8B4513' : '#228B22';
+                        createParticles(enemies[ei].x + enemies[ei].width / 2, enemies[ei].y + enemies[ei].height / 2, color);
+                        createParticles(fb.x + 6, fb.y + 6, '#FF6600');
+                        enemies.splice(ei, 1);
+                        gameState.score += 200;
+                        hit = true;
+                        break;
+                    }
+                }
+                if (hit) {
+                    fireballs.splice(fi, 1);
+                }
+            }
+
             if (checkCollision(player, flag)) {
                 winLevel();
             }
@@ -1586,9 +1636,54 @@
                 }
             });
             
+            // Draw fireballs
+            fireballs.forEach(fb => {
+                // Outer orange glow
+                ctx.fillStyle = '#FF6600';
+                ctx.beginPath();
+                ctx.arc(fb.x + 6, fb.y + 6, 7, 0, Math.PI * 2);
+                ctx.fill();
+                // Mid yellow layer
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(fb.x + 6, fb.y + 6, 4, 0, Math.PI * 2);
+                ctx.fill();
+                // White-hot core
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(fb.x + 6, fb.y + 6, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
             let playerHeight = player.ducking ? player.height / 2 : player.height;
             let playerY = player.ducking ? player.y + player.height / 2 : player.y;
-            
+
+            // Fire-power aura — orange ring around the player when powered
+            if (player.powered) {
+                const auraCx = player.x + player.width / 2;
+                const auraCy = playerY + playerHeight / 2;
+                const auraR = player.width / 2 + 5;
+                ctx.save();
+                ctx.globalAlpha = 0.4;
+                ctx.strokeStyle = '#FF6600';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(auraCx, auraCy, auraR, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 0.2;
+                ctx.fillStyle = '#FF6600';
+                ctx.beginPath();
+                ctx.arc(auraCx, auraCy, auraR, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                // Small "FIRE" label above head
+                ctx.fillStyle = '#FF4400';
+                ctx.font = 'bold 8px "Press Start 2P", cursive';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText('FIRE', auraCx, playerY - 2);
+            }
+
             drawPlayerSprite(player.x, playerY, player.character, player.facing);
             
             particles.forEach(particle => {

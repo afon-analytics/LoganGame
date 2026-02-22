@@ -933,6 +933,26 @@
             { x: 1280, y: 320, width: 25, height: 25, type: 'mushroom', collected: false },
             { x: 2020, y: 340, width: 25, height: 25, type: 'mushroom', collected: false }
         ];
+
+        // Question blocks — yellow ? blocks that spawn an item when hit from below
+        let questionBlocks = [
+            // Zone 1 — reachable from ground
+            { x: 350, y: 440, width: 30, height: 30, hit: false, item: 'mushroom' },
+            // Zone 1 — reachable from first elevated platform (y=420)
+            { x: 250, y: 300, width: 30, height: 30, hit: false, item: 'flower' },
+            // Zone 2 — reachable from ground
+            { x: 580, y: 440, width: 30, height: 30, hit: false, item: 'mushroom' },
+            // Zone 2 — reachable from second platform (y=320)
+            { x: 500, y: 205, width: 30, height: 30, hit: false, item: 'flower' },
+            // Middle — reachable from ground
+            { x: 1100, y: 440, width: 30, height: 30, hit: false, item: 'mushroom' },
+            // Middle — reachable from platform (y=350)
+            { x: 1270, y: 255, width: 30, height: 30, hit: false, item: 'flower' },
+            // Late — reachable from ground
+            { x: 1760, y: 440, width: 30, height: 30, hit: false, item: 'mushroom' },
+            // Late — reachable from platform (y=370)
+            { x: 2060, y: 270, width: 30, height: 30, hit: false, item: 'flower' },
+        ];
         
         let flag = {
             x: 2280,
@@ -1066,12 +1086,51 @@
                 }
             });
             
+            // Question block collision — solid from all sides; hit from below spawns item
+            questionBlocks.forEach(block => {
+                if (checkCollision(player, block)) {
+                    // Land on top
+                    if (player.velocityY > 0 && player.y + player.height - player.velocityY <= block.y) {
+                        player.y = block.y - player.height;
+                        player.velocityY = 0;
+                        player.onGround = true;
+                    }
+                    // Hit from underneath
+                    else if (player.velocityY < 0 && player.y - player.velocityY >= block.y + block.height) {
+                        player.y = block.y + block.height;
+                        player.velocityY = 0;
+                        if (!block.hit) {
+                            block.hit = true;
+                            // Spawn item centred just above the block
+                            powerups.push({
+                                x: block.x + (block.width - 24) / 2,
+                                y: block.y - 28,
+                                width: 24,
+                                height: 24,
+                                type: block.item,
+                                collected: false
+                            });
+                            createParticles(block.x + block.width / 2, block.y, '#FFD700');
+                        }
+                    }
+                    // Side collision
+                    else {
+                        if (player.x + player.width / 2 < block.x + block.width / 2) {
+                            player.x = block.x - player.width;
+                        } else {
+                            player.x = block.x + block.width;
+                        }
+                    }
+                }
+            });
+
             powerups.forEach(powerup => {
                 if (!powerup.collected && checkCollision(player, powerup)) {
                     powerup.collected = true;
                     gameState.lives++;
                     updateLives();
-                    createParticles(powerup.x + powerup.width/2, powerup.y + powerup.height/2, '#FFD700');
+                    const pColor = powerup.type === 'flower' ? '#FF4444' : '#FFD700';
+                    createParticles(powerup.x + powerup.width / 2, powerup.y + powerup.height / 2, pColor);
                 }
             });
             
@@ -1342,6 +1401,41 @@
                 }
             });
             
+            // Draw question blocks
+            questionBlocks.forEach(block => {
+                if (!block.hit) {
+                    // Yellow body
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(block.x, block.y, block.width, block.height);
+                    // Inner lighter face
+                    ctx.fillStyle = '#FFE84D';
+                    ctx.fillRect(block.x + 3, block.y + 3, block.width - 6, block.height - 6);
+                    // Dark gold border — top/left (highlight) and bottom/right (shadow)
+                    ctx.fillStyle = '#CC8800';
+                    ctx.fillRect(block.x,                       block.y,                        block.width, 3); // top
+                    ctx.fillRect(block.x,                       block.y + block.height - 3,     block.width, 3); // bottom
+                    ctx.fillRect(block.x,                       block.y,                        3, block.height); // left
+                    ctx.fillRect(block.x + block.width - 3,     block.y,                        3, block.height); // right
+                    // White ? mark
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 16px "Press Start 2P", cursive';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', block.x + block.width / 2, block.y + block.height / 2 + 1);
+                } else {
+                    // Hit / empty block — dark brown
+                    ctx.fillStyle = '#7A5C00';
+                    ctx.fillRect(block.x, block.y, block.width, block.height);
+                    ctx.fillStyle = '#5A4200';
+                    ctx.fillRect(block.x + 3, block.y + 3, block.width - 6, block.height - 6);
+                    ctx.fillStyle = '#3A2C00';
+                    ctx.fillRect(block.x,                       block.y,                        block.width, 3);
+                    ctx.fillRect(block.x,                       block.y + block.height - 3,     block.width, 3);
+                    ctx.fillRect(block.x,                       block.y,                        3, block.height);
+                    ctx.fillRect(block.x + block.width - 3,     block.y,                        3, block.height);
+                }
+            });
+
             ctx.fillStyle = '#666';
             ctx.fillRect(flag.x + 5, flag.y, 8, flag.height);
             ctx.fillStyle = '#FFD700';
@@ -1410,10 +1504,85 @@
             
             powerups.forEach(powerup => {
                 if (!powerup.collected) {
-                    ctx.fillStyle = '#FF6B6B';
-                    ctx.fillRect(powerup.x, powerup.y, powerup.width, powerup.height);
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(powerup.x + 8, powerup.y + 8, 9, 9);
+                    const px = powerup.x;
+                    const py = powerup.y;
+                    const pw = powerup.width;   // 24 for spawned, 25 for static
+                    const ph = powerup.height;
+                    const pcx = px + pw / 2;
+                    const pcy = py + ph / 2;
+
+                    if (powerup.type === 'mushroom') {
+                        // Stem (cream)
+                        ctx.fillStyle = '#FFDBAC';
+                        ctx.fillRect(pcx - 7, pcy, 14, ph / 2 + 2);
+                        // Stem bottom feet
+                        ctx.fillStyle = '#EEC98A';
+                        ctx.fillRect(pcx - 9, py + ph - 6, 6, 6);
+                        ctx.fillRect(pcx + 3, py + ph - 6, 6, 6);
+                        // Cap (red semicircle)
+                        ctx.fillStyle = '#EE1111';
+                        ctx.beginPath();
+                        ctx.arc(pcx, pcy - 1, pw / 2 + 1, Math.PI, 0);
+                        ctx.fill();
+                        // Cap edge
+                        ctx.fillStyle = '#CC0000';
+                        ctx.fillRect(px, pcy - 2, pw, 4);
+                        // White spots on cap
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.beginPath();
+                        ctx.arc(pcx - 5, pcy - 7, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(pcx + 5, pcy - 8, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(pcx, pcy - 3, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                        // Eyes on stem
+                        ctx.fillStyle = '#000000';
+                        ctx.fillRect(pcx - 5, pcy + 2, 2, 2);
+                        ctx.fillRect(pcx + 3, pcy + 2, 2, 2);
+
+                    } else if (powerup.type === 'flower') {
+                        // Stem (green)
+                        ctx.fillStyle = '#22AA22';
+                        ctx.fillRect(pcx - 2, pcy + 2, 4, ph / 2 + 2);
+                        // Leaf
+                        ctx.fillStyle = '#33CC33';
+                        ctx.fillRect(pcx - 6, pcy + 4, 5, 3);
+                        ctx.fillRect(pcx + 1, pcy + 7, 5, 3);
+                        // 4 petals alternating red / white
+                        const petalOffsets = [
+                            [0, -8],   // top
+                            [8,  0],   // right
+                            [0,  8],   // bottom
+                            [-8, 0],   // left
+                        ];
+                        petalOffsets.forEach(([dx, dy], i) => {
+                            ctx.fillStyle = i % 2 === 0 ? '#FF2222' : '#FFFFFF';
+                            ctx.beginPath();
+                            ctx.arc(pcx + dx, pcy - 4 + dy, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                        });
+                        // Dark outline ring on petals (subtle)
+                        petalOffsets.forEach(([dx, dy]) => {
+                            ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.arc(pcx + dx, pcy - 4 + dy, 5, 0, Math.PI * 2);
+                            ctx.stroke();
+                        });
+                        // Yellow centre
+                        ctx.fillStyle = '#FFD700';
+                        ctx.beginPath();
+                        ctx.arc(pcx, pcy - 4, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                        // Centre dot
+                        ctx.fillStyle = '#CC8800';
+                        ctx.beginPath();
+                        ctx.arc(pcx, pcy - 4, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
             });
             

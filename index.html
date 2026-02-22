@@ -1134,90 +1134,155 @@
         
         function drawPlayerSprite(x, y, character, facing) {
             if (character === 'mario') {
+                // Hat brim (darker red, full-width)
+                ctx.fillStyle = '#AA0000';
+                ctx.fillRect(x + 0, y + 5, 32, 3);
+                // Hat crown
+                ctx.fillStyle = '#CC0000';
+                ctx.fillRect(x + 4, y + 0, 24, 8);
+
+                // Head (flesh)
                 ctx.fillStyle = '#FFDBAC';
                 ctx.beginPath();
-                ctx.arc(x + 16, y + 4, 8, 0, Math.PI * 2);
+                ctx.arc(x + 16, y + 14, 7, 0, Math.PI * 2);
                 ctx.fill();
-                
+
+                // Eyes: white + blue iris + black pupil
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(x + 9,  y + 11, 5, 4);
+                ctx.fillRect(x + 18, y + 11, 5, 4);
+                ctx.fillStyle = '#3355EE';
+                ctx.fillRect(x + 10, y + 12, 3, 3);
+                ctx.fillRect(x + 19, y + 12, 3, 3);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(x + 10, y + 12, 2, 2);
+                ctx.fillRect(x + 19, y + 12, 2, 2);
+
+                // Mustache (brown bar)
                 ctx.fillStyle = '#8B4513';
-                ctx.fillRect(x + 8, y - 2, 16, 6);
-                
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(x + 10, y + 2, 4, 4);
-                ctx.fillRect(x + 18, y + 2, 4, 4);
-                ctx.fillStyle = '#000';
-                ctx.fillRect(x + 11, y + 3, 2, 2);
-                ctx.fillRect(x + 19, y + 3, 2, 2);
-                
-                ctx.fillStyle = '#FF0000';
-                ctx.fillRect(x + 8, y + 12, 16, 12);
-                
-                ctx.fillStyle = '#0040FF';
-                ctx.fillRect(x + 10, y + 24, 4, 8);
-                ctx.fillRect(x + 18, y + 24, 4, 8);
-                
-                ctx.fillStyle = '#8B4513';
-                ctx.fillRect(x + 9, y + 32, 6, 2);
-                ctx.fillRect(x + 17, y + 32, 6, 2);
+                ctx.fillRect(x + 9, y + 17, 14, 3);
+
+                // Red shirt body
+                ctx.fillStyle = '#FF2222';
+                ctx.fillRect(x + 6, y + 21, 20, 7);
+                // Blue overall straps over shirt
+                ctx.fillStyle = '#1133BB';
+                ctx.fillRect(x + 11, y + 21, 4, 7);
+                ctx.fillRect(x + 17, y + 21, 4, 7);
+
+                // Blue pants legs
+                ctx.fillStyle = '#1133BB';
+                ctx.fillRect(x + 6,  y + 27, 9, 6);
+                ctx.fillRect(x + 17, y + 27, 9, 6);
+
+                // Brown shoes
+                ctx.fillStyle = '#6B3A2A';
+                ctx.fillRect(x + 4,  y + 31, 12, 3);
+                ctx.fillRect(x + 16, y + 31, 12, 3);
+
             } else if (character === 'luigi') {
+                // Hat brim (dark green)
+                ctx.fillStyle = '#1A4A1A';
+                ctx.fillRect(x + 0, y + 5, 32, 3);
+                // Hat crown (brighter green)
+                ctx.fillStyle = '#2D7A2D';
+                ctx.fillRect(x + 4, y + 0, 24, 8);
+
+                // Head (flesh)
                 ctx.fillStyle = '#FFDBAC';
                 ctx.beginPath();
-                ctx.arc(x + 16, y + 4, 8, 0, Math.PI * 2);
+                ctx.arc(x + 16, y + 14, 7, 0, Math.PI * 2);
                 ctx.fill();
-                
-                ctx.fillStyle = '#2D5016';
-                ctx.fillRect(x + 8, y - 2, 16, 6);
-                
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(x + 10, y + 2, 4, 4);
-                ctx.fillRect(x + 18, y + 2, 4, 4);
-                ctx.fillStyle = '#000';
-                ctx.fillRect(x + 11, y + 3, 2, 2);
-                ctx.fillRect(x + 19, y + 3, 2, 2);
-                
-                ctx.fillStyle = '#00CC00';
-                ctx.fillRect(x + 8, y + 12, 16, 12);
-                
-                ctx.fillStyle = '#00AA00';
-                ctx.fillRect(x + 10, y + 24, 4, 8);
-                ctx.fillRect(x + 18, y + 24, 4, 8);
-                
-                ctx.fillStyle = '#2D5016';
-                ctx.fillRect(x + 9, y + 32, 6, 2);
-                ctx.fillRect(x + 17, y + 32, 6, 2);
+
+                // Eyes: white + brown iris + black pupil
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(x + 9,  y + 11, 5, 4);
+                ctx.fillRect(x + 18, y + 11, 5, 4);
+                ctx.fillStyle = '#6B3A10';
+                ctx.fillRect(x + 10, y + 12, 3, 3);
+                ctx.fillRect(x + 19, y + 12, 3, 3);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(x + 10, y + 12, 2, 2);
+                ctx.fillRect(x + 19, y + 12, 2, 2);
+
+                // Mustache (darker, thinner)
+                ctx.fillStyle = '#5A3010';
+                ctx.fillRect(x + 9, y + 17, 14, 3);
+
+                // Green shirt body
+                ctx.fillStyle = '#009900';
+                ctx.fillRect(x + 6, y + 21, 20, 7);
+                // Blue overall straps
+                ctx.fillStyle = '#1133BB';
+                ctx.fillRect(x + 11, y + 21, 4, 7);
+                ctx.fillRect(x + 17, y + 21, 4, 7);
+
+                // Blue pants legs
+                ctx.fillStyle = '#1133BB';
+                ctx.fillRect(x + 6,  y + 27, 9, 6);
+                ctx.fillRect(x + 17, y + 27, 9, 6);
+
+                // Dark green shoes (matches home screen)
+                ctx.fillStyle = '#1A4A1A';
+                ctx.fillRect(x + 4,  y + 31, 12, 3);
+                ctx.fillRect(x + 16, y + 31, 12, 3);
+
             } else if (character === 'donkey') {
-                ctx.fillStyle = '#8B4513';
+                // Heavy brow ridge
+                ctx.fillStyle = '#4A2810';
+                ctx.fillRect(x + 2, y + 2, 28, 5);
+                // Large dark-brown head
+                ctx.fillStyle = '#6B3A1A';
                 ctx.beginPath();
-                ctx.arc(x + 16, y + 6, 10, 0, Math.PI * 2);
+                ctx.arc(x + 16, y + 11, 11, 0, Math.PI * 2);
                 ctx.fill();
-                
-                ctx.fillStyle = '#A0522D';
+
+                // Cream face oval (matches home screen)
+                ctx.fillStyle = '#C8956A';
                 ctx.beginPath();
-                ctx.arc(x + 16, y + 8, 7, 0, Math.PI * 2);
+                ctx.ellipse(x + 16, y + 13, 7, 9, 0, 0, Math.PI * 2);
                 ctx.fill();
-                
-                ctx.fillStyle = '#fff';
+
+                // Eyes: white sclera + black pupil + shine
+                ctx.fillStyle = '#FFFFFF';
                 ctx.beginPath();
-                ctx.arc(x + 10, y + 5, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(x + 22, y + 5, 3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(x + 10, y + 6, 2, 0, Math.PI * 2);
+                ctx.arc(x + 9,  y + 8, 4, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(x + 22, y + 6, 2, 0, Math.PI * 2);
+                ctx.arc(x + 23, y + 8, 4, 0, Math.PI * 2);
                 ctx.fill();
-                
-                ctx.fillStyle = '#8B4513';
-                ctx.fillRect(x + 6, y + 16, 20, 14);
-                
-                ctx.fillStyle = '#8B4513';
-                ctx.fillRect(x + 10, y + 30, 4, 8);
-                ctx.fillRect(x + 18, y + 30, 4, 8);
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(x + 9,  y + 8, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x + 23, y + 8, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(x + 8,  y + 7, 1, 1);
+                ctx.fillRect(x + 22, y + 7, 1, 1);
+
+                // Nostrils
+                ctx.fillStyle = '#2A1005';
+                ctx.fillRect(x + 12, y + 16, 2, 2);
+                ctx.fillRect(x + 18, y + 16, 2, 2);
+
+                // Body: dark-brown with lighter chest center
+                ctx.fillStyle = '#6B3A1A';
+                ctx.fillRect(x + 3, y + 21, 26, 12);
+                ctx.fillStyle = '#8B5A3A';
+                ctx.fillRect(x + 8, y + 22, 16,  9);
+
+                // Red tie with darker knot
+                ctx.fillStyle = '#CC0000';
+                ctx.fillRect(x + 14, y + 21,  4, 12);
+                ctx.fillStyle = '#990000';
+                ctx.fillRect(x + 13, y + 21,  6,  3);
+
+                // Legs
+                ctx.fillStyle = '#6B3A1A';
+                ctx.fillRect(x + 5,  y + 32, 9, 4);
+                ctx.fillRect(x + 18, y + 32, 9, 4);
             }
         }
         
